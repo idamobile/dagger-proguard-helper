@@ -4,3 +4,9 @@
 *.jar
 *.war
 *.ear
+dagger-proguard-helper-processor/dagger-proguard-helper-processor.iml
+dagger-proguard-helper-sample/dagger-proguard-helper-sample.iml
+dagger-proguard-helper-sample/dagger-proguard-keepnames.cfg
+dagger-proguard-keepnames.cfg
+dagger-proguard-helper.iml
+**/target/*
