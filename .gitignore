@@ -10,3 +10,4 @@ dagger-proguard-helper-sample/dagger-proguard-keepnames.cfg
 dagger-proguard-keepnames.cfg
 dagger-proguard-helper.iml
 **/target/*
+.idea/*
