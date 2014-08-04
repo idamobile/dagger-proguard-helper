@@ -13,6 +13,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
@@ -45,13 +46,18 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                 if (elem.getKind() == ElementKind.METHOD) {
                     ExecutableElement executable = (ExecutableElement) elem;
                     TypeMirror returnType = executable.getReturnType();
-                    addIfNeeded(returnType,  keepNames);
+                    addIfNeeded(returnType, keepNames);
                 }
             }
             for (Element elem : roundEnv.getElementsAnnotatedWith(Module.class)) {
                 Module module = elem.getAnnotation(Module.class);
                 try {
                     module.injects();
+                } catch (MirroredTypeException e) {
+                    final TypeMirror typeMirror = e.getTypeMirror();
+                    if (typeMirror != null) {
+                        addIfNeeded(typeMirror, keepNames);
+                    }
                 } catch (MirroredTypesException e) {
                     List<? extends TypeMirror> typeMirrors = e.getTypeMirrors();
                     if (typeMirrors != null && !typeMirrors.isEmpty()) {
@@ -60,6 +66,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                         }
                     }
                 }
+
             }
             createProGuardFile(keepNames);
         }
@@ -83,7 +90,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
         }
     }
 
-    private void addIfNeeded(TypeParams type, Set <String> keepNames) {
+    private void addIfNeeded(TypeParams type, Set<String> keepNames) {
         if (type.isKeepRequaried()) {
             if (keepNames.add(type.getName())) {
                 System.out.println("dagger-helper: found new dependent type " + type.getName());
@@ -96,7 +103,8 @@ public class DaggerModulesProcessor extends AbstractProcessor {
 
     private void addEnclosingClassName(Element elem, Set<String> keepNames) {
         Element enclosingClass = elem.getEnclosingElement();
-        for (; enclosingClass != null && enclosingClass.getKind() != ElementKind.CLASS; enclosingClass = elem.getEnclosingElement());
+        for (; enclosingClass != null && enclosingClass.getKind() != ElementKind.CLASS; enclosingClass = elem.getEnclosingElement())
+            ;
         if (enclosingClass != null) {
             addIfNeeded(enclosingClass.asType(), keepNames);
         }
