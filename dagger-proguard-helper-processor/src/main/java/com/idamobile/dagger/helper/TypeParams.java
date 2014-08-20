@@ -1,15 +1,21 @@
 package com.idamobile.dagger.helper;
 
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 
 public class TypeParams {
+
     private String typeName;
     private List<TypeParams> genericTypes = new ArrayList<TypeParams>();
+    private TypeMirror typeMirror;
 
     public TypeParams(TypeMirror type) {
+        typeMirror = type;
         typeName = type.toString();
         if (typeName.contains("<")) {
             typeName = typeName.substring(0, typeName.indexOf("<"));
@@ -23,6 +29,15 @@ public class TypeParams {
                 }
             }
         }
+    }
+
+    public TypeMirror getTypeMirror() {
+        return typeMirror;
+    }
+
+    public Element asElement(ProcessingEnvironment processingEnv) {
+        Types typeUtils = processingEnv.getTypeUtils();
+        return typeUtils.asElement(typeMirror);
     }
 
     public String getName() {
