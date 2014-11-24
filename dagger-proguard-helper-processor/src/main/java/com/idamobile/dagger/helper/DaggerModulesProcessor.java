@@ -1,25 +1,17 @@
 package com.idamobile.dagger.helper;
 
-import dagger.Module;
-import dagger.Provides;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
+import java.io.*;
+import java.util.*;
+import javax.annotation.processing.*;
 import javax.inject.Inject;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
-import java.io.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import dagger.Module;
+import dagger.Provides;
 
 @SupportedAnnotationTypes("dagger.Module")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
@@ -49,6 +41,10 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                 }
             }
             for (Element elem : roundEnv.getElementsAnnotatedWith(Module.class)) {
+                String name = getKeepName(elem);
+                if (keepNames.add(name)) {
+                    System.out.println("dagger-helper: found new dependent type " + name);
+                }
                 Module module = elem.getAnnotation(Module.class);
                 try {
                     module.injects();
@@ -85,8 +81,9 @@ public class DaggerModulesProcessor extends AbstractProcessor {
 
     private void addIfNeeded(TypeParams type, Set <String> keepNames) {
         if (type.isKeepRequaried()) {
-            if (keepNames.add(type.getName())) {
-                System.out.println("dagger-helper: found new dependent type " + type.getName());
+            String name = getKeepName(type.asElement(processingEnv));
+            if (keepNames.add(name)) {
+                System.out.println("dagger-helper: found new dependent type " + name);
             }
         }
         for (TypeParams params : type.getGenerics()) {
@@ -94,9 +91,14 @@ public class DaggerModulesProcessor extends AbstractProcessor {
         }
     }
 
+    private String getKeepName(Element element) {
+        return (element.getEnclosingElement().getKind() == ElementKind.PACKAGE)
+               ? element.toString()
+               : getKeepName(element.getEnclosingElement()) + "$" + element.getSimpleName();
+    }
+
     private void addEnclosingClassName(Element elem, Set<String> keepNames) {
         Element enclosingClass = elem.getEnclosingElement();
-        for (; enclosingClass != null && enclosingClass.getKind() != ElementKind.CLASS; enclosingClass = elem.getEnclosingElement());
         if (enclosingClass != null) {
             addIfNeeded(enclosingClass.asType(), keepNames);
         }
