@@ -1,7 +1,14 @@
 package com.idamobile.dagger.helper;
 
-import dagger.Module;
-import dagger.Provides;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -16,10 +23,12 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
-import java.io.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import javax.tools.FileObject;
+import javax.tools.JavaFileManager;
+import javax.tools.StandardLocation;
+
+import dagger.Module;
+import dagger.Provides;
 
 @SupportedAnnotationTypes("dagger.Module")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
@@ -36,8 +45,8 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                     addIfNeeded(typeMirror, keepNames);
                     addEnclosingClassName(elem, keepNames);
                 } else if (elem.getKind() == ElementKind.CONSTRUCTOR
-                        || elem.getKind() == ElementKind.METHOD
-                        || elem.getKind() == ElementKind.PARAMETER) {
+                    || elem.getKind() == ElementKind.METHOD
+                    || elem.getKind() == ElementKind.PARAMETER) {
                     addEnclosingClassName(elem, keepNames);
                 }
             }
@@ -45,7 +54,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                 if (elem.getKind() == ElementKind.METHOD) {
                     ExecutableElement executable = (ExecutableElement) elem;
                     TypeMirror returnType = executable.getReturnType();
-                    addIfNeeded(returnType,  keepNames);
+                    addIfNeeded(returnType, keepNames);
                 }
             }
             for (Element elem : roundEnv.getElementsAnnotatedWith(Module.class)) {
@@ -61,7 +70,11 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                     }
                 }
             }
-            createProGuardFile(keepNames);
+            try {
+                createProGuardFile(keepNames);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         return false;
     }
@@ -83,7 +96,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
         }
     }
 
-    private void addIfNeeded(TypeParams type, Set <String> keepNames) {
+    private void addIfNeeded(TypeParams type, Set<String> keepNames) {
         if (type.isKeepRequaried()) {
             if (keepNames.add(type.getName())) {
                 System.out.println("dagger-helper: found new dependent type " + type.getName());
@@ -96,14 +109,31 @@ public class DaggerModulesProcessor extends AbstractProcessor {
 
     private void addEnclosingClassName(Element elem, Set<String> keepNames) {
         Element enclosingClass = elem.getEnclosingElement();
-        for (; enclosingClass != null && enclosingClass.getKind() != ElementKind.CLASS; enclosingClass = elem.getEnclosingElement());
+        for (; enclosingClass != null && enclosingClass.getKind() != ElementKind.CLASS; enclosingClass = elem.getEnclosingElement()) ;
         if (enclosingClass != null) {
             addIfNeeded(enclosingClass.asType(), keepNames);
         }
     }
 
-    private void createProGuardFile(Set<String> keepNames) {
-        File file = new File("dagger-proguard-keepnames.cfg");
+    private void createProGuardFile(Set<String> keepNames) throws IOException {
+        JavaFileManager.Location location = StandardLocation.SOURCE_OUTPUT;
+        final String relativeName = UUID.randomUUID().toString();
+        FileObject resource = processingEnv.getFiler().createResource(location, "", relativeName);
+
+        final String name = resource.getName();
+        final int targetIndexOf = name.indexOf("target");
+        final int buildIndexOf = name.indexOf("build");
+        final String basePath;
+        if(targetIndexOf > 0) {
+            basePath = name.substring(0, targetIndexOf);
+        } else if(buildIndexOf > 0) {
+            basePath = name.substring(0, buildIndexOf);
+        } else {
+            System.out.println("dagger-helper: COULD NOT GET BASE PATH FOR PATH: ");
+            System.out.println(name);
+            basePath = "";
+        }
+        File file = new File(basePath, "dagger-proguard-keepnames.cfg");
         if (file.exists() && keepNames.isEmpty()) {
             return;
         }
