@@ -12,15 +12,15 @@ You should add to your pom.xml:
         <dependency>
             <groupId>com.github.idamobile</groupId>
             <artifactId>dagger-proguard-helper-processor</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
 Also add to your `<repositories>`:
 
         <repository>
-            <id>ida-repo-public</id>
-            <url>http://nexus.idamob.ru/content/groups/public/</url>
+            <id>shaubert-snapshots</id>
+            <url>https://github.com/shaubert/maven-repo/raw/master/snapshots</url>
         </repository>
 
 The Dagger Proguard Helper annotation processor will generate `dagger-proguard-keepnames.cfg` at root of your project. You have to add this config file to proguard configuration. If you are using [android-maven-plugin](https://code.google.com/p/maven-android-plugin/) the configuration should be like following:
