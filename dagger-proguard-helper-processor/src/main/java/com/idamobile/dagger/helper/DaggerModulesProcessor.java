@@ -13,6 +13,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
@@ -53,13 +54,10 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                 Module module = elem.getAnnotation(Module.class);
                 try {
                     module.injects();
+                } catch (MirroredTypeException e) {
+                    addFromMirrorsIfNeeded(Collections.singletonList(e.getTypeMirror()), keepNames);
                 } catch (MirroredTypesException e) {
-                    List<? extends TypeMirror> typeMirrors = e.getTypeMirrors();
-                    if (typeMirrors != null && !typeMirrors.isEmpty()) {
-                        for (TypeMirror mirror : typeMirrors) {
-                            addIfNeeded(mirror, keepNames);
-                        }
-                    }
+                    addFromMirrorsIfNeeded(e.getTypeMirrors(), keepNames);
                 }
             }
             try {
@@ -69,6 +67,16 @@ public class DaggerModulesProcessor extends AbstractProcessor {
             }
         }
         return false;
+    }
+
+    private void addFromMirrorsIfNeeded(List<? extends TypeMirror> typeMirrors, Set<String> keepNames) {
+        if (typeMirrors != null && !typeMirrors.isEmpty()) {
+            for (TypeMirror mirror : typeMirrors) {
+                if (mirror != null) {
+                    addIfNeeded(mirror, keepNames);
+                }
+            }
+        }
     }
 
     private void addIfNeeded(TypeMirror type, Set<String> keepNames) {
