@@ -22,23 +22,19 @@
         <tag>HEAD</tag>
     </scm>
 
-    <repositories>
-        <repository>
-            <id>ida-repo-public</id>
-            <url>http://nexus.idamob.ru/content/groups/public/</url>
-        </repository>
-    </repositories>
+    <properties>
+        <repo.id>git.shaubert.repo</repo.id>
+        <repo.url>file://W:/home/maven-repo</repo.url>
+    </properties>
 
     <distributionManagement>
         <repository>
-            <id>ida-repo-releases</id>
-            <name>iDa Mobile Repo - Releases</name>
-            <url>http://nexus.idamob.ru/content/repositories/releases</url>
+            <id>${repo.id}</id>
+            <url>${repo.url}/releases</url>
         </repository>
         <snapshotRepository>
-            <id>ida-repo-snapshots</id>
-            <name>iDa Mobile Repo - Snapshots</name>
-            <url>http://nexus.idamob.ru/content/repositories/snapshots</url>
+            <id>${repo.id}-snapshots</id>
+            <url>${repo.url}/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 
