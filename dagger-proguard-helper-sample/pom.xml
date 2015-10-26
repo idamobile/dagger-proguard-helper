@@ -6,13 +6,13 @@
     <name>Dagger Proguard Helper Sample</name>
 
     <artifactId>dagger-proguard-helper-sample</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <parent>
         <groupId>com.github.idamobile</groupId>
         <artifactId>dagger-proguard-helper</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -23,7 +23,7 @@
          <dependency>
             <groupId>com.github.idamobile</groupId>
             <artifactId>dagger-proguard-helper-processor</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
