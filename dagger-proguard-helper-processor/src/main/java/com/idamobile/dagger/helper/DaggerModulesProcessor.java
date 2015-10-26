@@ -1,14 +1,7 @@
 package com.idamobile.dagger.helper;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import dagger.Module;
+import dagger.Provides;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -26,9 +19,8 @@ import javax.lang.model.util.Types;
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.StandardLocation;
-
-import dagger.Module;
-import dagger.Provides;
+import java.io.*;
+import java.util.*;
 
 @SupportedAnnotationTypes("dagger.Module")
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
@@ -45,8 +37,8 @@ public class DaggerModulesProcessor extends AbstractProcessor {
                     addIfNeeded(typeMirror, keepNames);
                     addEnclosingClassName(elem, keepNames);
                 } else if (elem.getKind() == ElementKind.CONSTRUCTOR
-                    || elem.getKind() == ElementKind.METHOD
-                    || elem.getKind() == ElementKind.PARAMETER) {
+                        || elem.getKind() == ElementKind.METHOD
+                        || elem.getKind() == ElementKind.PARAMETER) {
                     addEnclosingClassName(elem, keepNames);
                 }
             }
@@ -109,7 +101,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
 
     private void addEnclosingClassName(Element elem, Set<String> keepNames) {
         Element enclosingClass = elem.getEnclosingElement();
-        for (; enclosingClass != null && enclosingClass.getKind() != ElementKind.CLASS; enclosingClass = elem.getEnclosingElement()) ;
+        for (; enclosingClass != null && enclosingClass.getKind() != ElementKind.CLASS; enclosingClass = elem.getEnclosingElement());
         if (enclosingClass != null) {
             addIfNeeded(enclosingClass.asType(), keepNames);
         }
@@ -124,14 +116,13 @@ public class DaggerModulesProcessor extends AbstractProcessor {
         final int targetIndexOf = name.indexOf("target");
         final int buildIndexOf = name.indexOf("build");
         final String basePath;
-        if(targetIndexOf > 0) {
+        if (targetIndexOf > 0) {
             basePath = name.substring(0, targetIndexOf);
-        } else if(buildIndexOf > 0) {
+        } else if (buildIndexOf > 0) {
             basePath = name.substring(0, buildIndexOf);
         } else {
-            System.out.println("dagger-helper: COULD NOT GET BASE PATH FOR PATH: ");
-            System.out.println(name);
             basePath = "";
+            System.out.println("dagger-helper: could not get base path of: \"" + name + "\"");
         }
         File file = new File(basePath, "dagger-proguard-keepnames.cfg");
         if (file.exists() && keepNames.isEmpty()) {
@@ -143,7 +134,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
         try {
             outputStream = new FileOutputStream(file);
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-            writer.write("# do not modify that file, it's rewriting each build by dagger-proguard-helper and your changes will be removed");
+            writer.write("# do not modify that file, it's rewriting on each build by dagger-proguard-helper and your changes will be removed");
             writer.newLine();
             for (String className : keepNames) {
                 writer.write("-keepnames class ");
@@ -157,7 +148,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
             if (outputStream != null) {
                 try {
                     outputStream.close();
-                } catch (IOException e) {
+                } catch (IOException ignored) {
                 }
             }
         }
