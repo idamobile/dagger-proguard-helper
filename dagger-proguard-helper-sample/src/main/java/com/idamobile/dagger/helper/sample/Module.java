@@ -9,6 +9,7 @@ import dagger.Provides;
         ClassWithInjects2.class,
         ClassWithInjects3.class,
         ClassWithInjects4.class,
+        ClassWithInjects5.class
 })
 public class Module {
 

@@ -80,13 +80,13 @@ public class DaggerModulesProcessor extends AbstractProcessor {
     }
 
     private void addIfNeeded(TypeMirror type, Set<String> keepNames) {
-        TypeParams params = new TypeParams(type);
+        TypeParams params = new TypeParams(type, processingEnv);
         addIfNeeded(params, keepNames);
 
         Types typeUtils = processingEnv.getTypeUtils();
         TypeElement element = (TypeElement) typeUtils.asElement(type);
         while (element != null && !element.toString().equals(Object.class.getName())) {
-            addIfNeeded(new TypeParams(element.asType()), keepNames);
+            addIfNeeded(new TypeParams(element.asType(), processingEnv), keepNames);
             TypeMirror superclass = element.getSuperclass();
             if (superclass != null) {
                 element = (TypeElement) typeUtils.asElement(superclass);
@@ -98,7 +98,7 @@ public class DaggerModulesProcessor extends AbstractProcessor {
 
     private void addIfNeeded(TypeParams type, Set<String> keepNames) {
         if (type.isKeepRequaried()) {
-            if (keepNames.add(type.getName())) {
+            if (keepNames.add(type.getKeepName())) {
                 System.out.println("dagger-helper: found new dependent type " + type.getName());
             }
         }
